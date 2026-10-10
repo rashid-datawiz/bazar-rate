@@ -1,2 +1,89 @@
+
 @import "tailwindcss";
 @plugin "daisyui";
+
+:root {
+  --bazardor-bg: #f0f5f1;
+  --bazardor-card: #fbfdfb;
+  --bazardor-border: #dfe8e1;
+  --bazardor-green: #07883f;
+  --bazardor-text: #202b23;
+  --bazardor-muted: #737b74;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 1rem;
+}
+
+body {
+  background: var(--bazardor-bg);
+  color: var(--bazardor-text);
+}
+
+.baz-container {
+  width: min(100% - 2rem, 1400px);
+  margin-inline: auto;
+}
+
+.baz-surface {
+  background: var(--bazardor-card);
+  border: 1px solid var(--bazardor-border);
+  border-radius: 28px;
+}
+
+.baz-price-up {
+  color: #e43c43;
+  background: #fff0f0;
+}
+
+.baz-price-down {
+  color: #07964b;
+  background: #e9f8ee;
+}
+
+.baz-price-flat {
+  color: #747b75;
+  background: #eff2ef;
+}
+
+.baz-ticker-viewport {
+  overflow: hidden;
+  border-block: 1px solid #e6ece7;
+  background: #f9fcf9;
+}
+
+.baz-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: baz-ticker 48s linear infinite;
+}
+
+.baz-ticker-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.baz-ticker-viewport:hover .baz-ticker-track {
+  animation-play-state: paused;
+}
+
+@keyframes baz-ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .baz-ticker-track {
+    animation: none;
+  }
+}

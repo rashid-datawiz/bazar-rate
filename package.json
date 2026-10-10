@@ -15,7 +15,9 @@
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-hot-toast": "^2.6.1"
+    "react-fast-marquee": "^1.6.5",
+    "react-hot-toast": "^2.6.1",
+    "react-marquee-text": "^1.0.6"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
