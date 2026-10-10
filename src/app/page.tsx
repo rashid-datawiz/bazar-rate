@@ -5,7 +5,7 @@ import PriceTicker from "@/components/layout/PriceTicker";
 import Footer from "@/components/layout/Footer";
 import Marquee from "@/components/layout/Marquee";
 import PriceMovementSections from "@/components/home/PriceMovementSections";
-
+import AllProductsSection from "@/components/home/AllProductsSection";
 export default function HomePage() {
   return (
     <Suspense fallback={<HomePageFallback />}>
@@ -80,6 +80,7 @@ async function HomePageContent() {
 
       <main className="mx-auto max-w-7xl px-4">
         <PriceMovementSections />
+        <AllProductsSection />
       </main>
 
       <Footer />
