@@ -23,8 +23,8 @@ function SignInForm() {
   // Only allow local paths to prevent external redirects.
   const callbackURL =
     requestedCallback?.startsWith("/") &&
-    !requestedCallback.startsWith("//") &&
-    !requestedCallback.includes("\\")
+      !requestedCallback.startsWith("//") &&
+      !requestedCallback.includes("\\")
       ? requestedCallback
       : "/";
 
@@ -48,7 +48,7 @@ function SignInForm() {
         password,
         callbackURL,
       });
-      
+
 
       if (result.error) {
         toast.error(
@@ -70,7 +70,7 @@ function SignInForm() {
     }
   };
 
- 
+
 
   return (
     <main className="flex min-h-[80vh] items-center justify-center bg-[#F0F5F0] px-4 py-12">
@@ -189,7 +189,16 @@ function SignInForm() {
           >
             রেজিস্ট্রেশন করুন
           </Link>
+
+          
         </p>
+        {/* Back to Home */}
+          <Link
+            href="/"
+            className="mt-7 text-sm text-[#758078] transition hover:text-[#078b43]"
+          >
+            ← হোম পেজে ফিরে যান
+          </Link>
       </div>
     </main>
   );
