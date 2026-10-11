@@ -22,7 +22,7 @@ export default function ProductCard({
 
   return (
     <Link
-      href={`/product/${encodeURIComponent(product.slug)}`}
+      href={`/product/${product.id}`}
       className="group flex h-full flex-col rounded-2xl border border-stone-200 bg-white p-4 transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg"
     >
       <div className="flex min-h-28 items-center justify-center rounded-xl bg-stone-50 text-6xl">

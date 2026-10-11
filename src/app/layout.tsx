@@ -1,4 +1,4 @@
-
+import ToastProvider from "@/components/providers/ToastProvider";
 import type { Metadata } from "next";
 import "./globals.css";
 export const metadata: Metadata = {
@@ -13,8 +13,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bn">
+    <html lang="bn" data-scroll-behavior="smooth">
       <body className="min-h-screen bg-stone-50 text-stone-900 antialiased">
+        <ToastProvider />
         {children}
       </body>
     </html>
