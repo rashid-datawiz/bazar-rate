@@ -32,7 +32,7 @@
 1. Install dependencies:
 
 	```bash
-	npm install --legacy-peer-deps
+	npm install
 	```
 
 2. Create a `.env` file in the project root and configure the required values:

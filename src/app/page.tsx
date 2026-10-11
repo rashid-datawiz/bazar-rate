@@ -1,5 +1,6 @@
 
 import { Suspense } from "react";
+import { connection } from "next/server";
 import Navbar from "@/components/layout/Navbar";
 import PriceTicker from "@/components/layout/PriceTicker";
 import Footer from "@/components/layout/Footer";
@@ -72,6 +73,8 @@ function HomePageFallback() {
 }
 
 async function HomePageContent() {
+  await connection();
+
   return (
     <div className="min-h-screen bg-[#F0F5EF]">
       <Navbar />

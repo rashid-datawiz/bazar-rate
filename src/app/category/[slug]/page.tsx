@@ -1,4 +1,5 @@
 
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import CategoryProductGrid from "@/components/category/CategoryProductGrid";
 
@@ -108,6 +109,33 @@ async function getCategoryProducts(slug: string) {
 }
 
 export default async function CategoryDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  return (
+    <Suspense fallback={<CategoryLoading /> }>
+      <CategoryDetailContent params={params} />
+    </Suspense>
+  );
+}
+
+function CategoryLoading() {
+  return (
+    <main className="min-h-[70vh] bg-[#F0F5EF] px-4 py-7 sm:py-10">
+      <div className="mx-auto max-w-7xl animate-pulse space-y-6">
+        <div className="h-24 rounded-2xl bg-white" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }, (_, index) => (
+            <div key={index} className="h-48 rounded-2xl bg-white" />
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+async function CategoryDetailContent({
   params,
 }: {
   params: Promise<{ slug: string }>;
