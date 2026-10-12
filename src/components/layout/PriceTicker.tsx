@@ -23,7 +23,7 @@ export default async function PriceTicker() {
         {items.map((product, index) => (
           <Link
             key={`${product.id}-${index}`}
-            href={`/product/${encodeURIComponent(product.slug)}`}
+            href={`/product/${encodeURIComponent(product.id)}`}
             className="flex shrink-0 items-center gap-2 text-sm"
           >
             <span>{product.emoji}</span>

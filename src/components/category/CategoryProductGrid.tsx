@@ -163,7 +163,7 @@ function ProductCard({
 
   return (
     <Link
-      href={`/product/${encodeURIComponent(product.slug)}`}
+      href={`/product/${encodeURIComponent(product.id)}`}
       aria-label={`${product.nameBn} - বিস্তারিত দেখুন`}
       className="group flex min-w-0 flex-col rounded-2xl border border-[#DFE8DF] bg-white p-4 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
     >

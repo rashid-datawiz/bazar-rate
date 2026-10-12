@@ -34,6 +34,10 @@ type Product = {
   markets?: Market[];
 };
 
+type ProductPageProps = {
+  params: Promise<{ id: string }>;
+};
+
 function formatNumber(value: number) {
   return value.toLocaleString("bn-BD", {
     maximumFractionDigits: 2,
@@ -41,17 +45,25 @@ function formatNumber(value: number) {
 }
 
 function formatPrice(value?: number) {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
+  if (
+    typeof value !== "number" ||
+    !Number.isFinite(value)
+  ) {
     return "তথ্য নেই";
   }
 
   return `${formatNumber(value)} টাকা`;
 }
 
-async function getProduct(id: string): Promise<Product | null> {
-  const response = await fetch(`${API_URL}/products/${id}`, {
-    cache: "no-store",
-  });
+async function getProduct(
+  id: string
+): Promise<Product | null> {
+  const response = await fetch(
+    `${API_URL}/products/${encodeURIComponent(id)}`,
+    {
+      cache: "no-store",
+    }
+  );
 
   if (response.status === 404) {
     return null;
@@ -64,37 +76,20 @@ async function getProduct(id: string): Promise<Product | null> {
   const result = await response.json();
 
   // Supports common API response formats.
-  const product = result.data ?? result.product ?? result;
+  const product =
+    result?.data ?? result?.product ?? result;
 
-  if (!product || typeof product !== "object" || !product.id) {
+  if (
+    !product ||
+    typeof product !== "object" ||
+    Array.isArray(product) ||
+    product.id === undefined ||
+    product.id === null
+  ) {
     return null;
   }
 
   return product as Product;
-}
-
-function PriceSummaryCard({
-  title,
-  price,
-  description,
-  valueColor = "text-emerald-700",
-}: {
-  title: string;
-  price?: number;
-  description: string;
-  valueColor?: string;
-}) {
-  return (
-    <div className="rounded-[18px] border border-[#DFE8DF] bg-[#FAFCFA] p-5 sm:p-6">
-      <p className="text-sm font-medium text-[#69736B]">{title}</p>
-
-      <p className={`mt-2 text-2xl font-bold ${valueColor}`}>
-        {formatPrice(price)}
-      </p>
-
-      <p className="mt-2 text-xs text-[#758078]">{description}</p>
-    </div>
-  );
 }
 
 function ProductDetailSkeleton() {
@@ -110,16 +105,39 @@ function ProductDetailSkeleton() {
   );
 }
 
-/**
- * The page shell contains no request-specific authentication calls.
- * Suspense allows the product content to resolve request-specific data
- * while displaying a skeleton.
- */
+function PriceSummaryCard({
+  title,
+  price,
+  description,
+  valueColor = "text-emerald-700",
+}: {
+  title: string;
+  price?: number;
+  description: string;
+  valueColor?: string;
+}) {
+  return (
+    <div className="rounded-[18px] border border-[#DFE8DF] bg-[#FAFCFA] p-5 sm:p-6">
+      <p className="text-sm font-medium text-[#69736B]">
+        {title}
+      </p>
+
+      <p
+        className={`mt-2 text-2xl font-bold ${valueColor}`}
+      >
+        {formatPrice(price)}
+      </p>
+
+      <p className="mt-2 text-xs text-[#758078]">
+        {description}
+      </p>
+    </div>
+  );
+}
+
 export default function ProductDetailPage({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+}: ProductPageProps) {
   return (
     <Suspense fallback={<ProductDetailSkeleton />}>
       <ProductDetailContent params={params} />
@@ -129,77 +147,106 @@ export default function ProductDetailPage({
 
 async function ProductDetailContent({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+}: ProductPageProps) {
   const { id } = await params;
 
-  // Authenticate before fetching or rendering product details.
+  // Require authentication before displaying product details.
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
+  // Preserve the requested product URL through sign-in.
   if (!session) {
     redirect(
-      `/signin?callbackURL=${encodeURIComponent(`/product/${id}`)}`
+      `/signin?callbackURL=${encodeURIComponent(
+        `/product/${id}`
+      )}`
     );
   }
 
+  // This API route expects a numeric product ID.
   if (!/^\d+$/.test(id)) {
     notFound();
   }
 
-  const product = await getProduct(id);
+  let product: Product | null;
+
+  try {
+    product = await getProduct(id);
+  } catch {
+    // Do not show a product-not-found page for a network
+    // or server error. Let Next.js render its error boundary.
+    throw new Error("পণ্যের তথ্য লোড করা যায়নি।");
+  }
 
   if (!product) {
     notFound();
   }
 
+  // Keep only markets with valid, non-negative price ranges.
   const markets = Array.isArray(product.markets)
-    ? product.markets
+    ? product.markets.filter(
+        (market): market is Market =>
+          Boolean(market) &&
+          typeof market.market === "string" &&
+          typeof market.min === "number" &&
+          Number.isFinite(market.min) &&
+          typeof market.max === "number" &&
+          Number.isFinite(market.max) &&
+          market.min >= 0 &&
+          market.max >= market.min
+      )
     : [];
 
-  const title = product.nameBn ?? product.name ?? "পণ্যের নাম";
+  const title =
+    product.nameBn ?? product.name ?? "পণ্যের নাম";
+
   const unit = product.unit ?? "কেজি";
 
-  const minimumPrices = markets
-    .map((market) => market.min)
-    .filter(
-      (price): price is number =>
-        typeof price === "number" && Number.isFinite(price)
-    );
-
-  const maximumPrices = markets
-    .map((market) => market.max)
-    .filter(
-      (price): price is number =>
-        typeof price === "number" && Number.isFinite(price)
-    );
-
   const lowest =
-    minimumPrices.length > 0 ? Math.min(...minimumPrices) : undefined;
+    markets.length > 0
+      ? Math.min(...markets.map((market) => market.min))
+      : undefined;
 
   const highest =
-    maximumPrices.length > 0 ? Math.max(...maximumPrices) : undefined;
+    markets.length > 0
+      ? Math.max(...markets.map((market) => market.max))
+      : undefined;
 
+  // Average the midpoint of each valid market's price range.
   const average =
     markets.length > 0
       ? markets.reduce(
-          (sum, market) => sum + (market.min + market.max) / 2,
+          (sum, market) =>
+            sum + (market.min + market.max) / 2,
           0
         ) / markets.length
       : product.today;
 
-  const yesterday = product.yesterday;
+  const today =
+    typeof product.today === "number" &&
+    Number.isFinite(product.today)
+      ? product.today
+      : undefined;
+
+  const yesterday =
+    typeof product.yesterday === "number" &&
+    Number.isFinite(product.yesterday)
+      ? product.yesterday
+      : undefined;
 
   const priceDifference =
-    typeof product.today === "number" &&
-    typeof yesterday === "number"
-      ? product.today - yesterday
+    today !== undefined && yesterday !== undefined
+      ? today - yesterday
       : undefined;
 
   const direction = product.change?.dir ?? "flat";
-  const changePercent = product.change?.pct;
+
+  const changePercent =
+    typeof product.change?.pct === "number" &&
+    Number.isFinite(product.change.pct)
+      ? product.change.pct
+      : undefined;
 
   const changeColor =
     direction === "up"
@@ -216,7 +263,10 @@ async function ProductDetailContent({
           aria-label="Breadcrumb"
           className="mb-7 flex flex-wrap items-center gap-2 text-sm text-[#526057]"
         >
-          <Link href="/" className="transition hover:text-emerald-700">
+          <Link
+            href="/"
+            className="transition hover:text-emerald-700"
+          >
             হোম
           </Link>
 
@@ -224,18 +274,24 @@ async function ProductDetailContent({
 
           {product.category ? (
             <Link
-              href={`/category/${product.category}`}
+              href={`/category/${encodeURIComponent(
+                product.category
+              )}`}
               className="transition hover:text-emerald-700"
             >
               {product.categoryNameBn ?? "পণ্য"}
             </Link>
           ) : (
-            <span>{product.categoryNameBn ?? "পণ্য"}</span>
+            <span>
+              {product.categoryNameBn ?? "পণ্য"}
+            </span>
           )}
 
           <span aria-hidden="true">›</span>
 
-          <span className="font-medium text-[#263229]">{title}</span>
+          <span className="font-medium text-[#263229]">
+            {title}
+          </span>
         </nav>
 
         {/* Product overview */}
@@ -255,11 +311,9 @@ async function ProductDetailContent({
             </div>
 
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-bold leading-tight text-[#202A22] sm:text-3xl">
-                  {title}
-                </h1>
-              </div>
+              <h1 className="text-2xl font-bold leading-tight text-[#202A22] sm:text-3xl">
+                {title}
+              </h1>
 
               <p className="mt-2 text-sm text-[#758078]">
                 প্রতি {unit}
@@ -281,7 +335,10 @@ async function ProductDetailContent({
                     </strong>
 
                     {priceDifference !== 0 && (
-                      <> · {formatPrice(Math.abs(priceDifference))}</>
+                      <>
+                        {" "}
+                        · {formatPrice(Math.abs(priceDifference))}
+                      </>
                     )}
                   </>
                 ) : (
@@ -293,10 +350,12 @@ async function ProductDetailContent({
 
           {/* Today's price */}
           <div className="flex min-w-[150px] flex-col items-center justify-center rounded-[18px] bg-[#F0F5F0] px-6 py-5 text-center sm:min-h-[148px]">
-            <span className="text-sm text-[#748078]">আজকের দাম</span>
+            <span className="text-sm text-[#748078]">
+              আজকের দাম
+            </span>
 
             <strong className="mt-2 text-3xl font-bold leading-tight text-[#202A22]">
-              {formatPrice(product.today)}
+              {formatPrice(today)}
             </strong>
 
             <span className="mt-1 text-xs text-[#748078]">
@@ -304,7 +363,9 @@ async function ProductDetailContent({
             </span>
 
             {changePercent !== undefined && (
-              <span className={`mt-3 text-sm font-bold ${changeColor}`}>
+              <span
+                className={`mt-3 text-sm font-bold ${changeColor}`}
+              >
                 {direction === "up"
                   ? "▲"
                   : direction === "down"
@@ -362,15 +423,19 @@ async function ProductDetailContent({
                       <th className="px-4 py-4 font-semibold sm:px-5">
                         বাজার
                       </th>
+
                       <th className="px-4 py-4 font-semibold sm:px-5">
                         বিভাগ
                       </th>
+
                       <th className="px-4 py-4 text-right font-semibold sm:px-5">
                         সর্বনিম্ন
                       </th>
+
                       <th className="px-4 py-4 text-right font-semibold sm:px-5">
                         সর্বোচ্চ
                       </th>
+
                       <th className="px-4 py-4 text-right font-semibold sm:px-5">
                         গড় দাম
                       </th>
@@ -380,7 +445,7 @@ async function ProductDetailContent({
                   <tbody>
                     {markets.map((market, index) => (
                       <tr
-                        key={`${market.market}-${index}`}
+                        key={`${market.market}-${market.division ?? ""}-${index}`}
                         className={`border-t border-[#E1E8E1] ${
                           index % 2 === 0
                             ? "bg-[#FBFDFB]"
@@ -404,7 +469,9 @@ async function ProductDetailContent({
                         </td>
 
                         <td className="px-4 py-4 text-right font-semibold text-[#28332B] sm:px-5">
-                          {formatPrice((market.min + market.max) / 2)}
+                          {formatPrice(
+                            (market.min + market.max) / 2
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -419,6 +486,7 @@ async function ProductDetailContent({
           </div>
         </section>
 
+        {/* Back to home */}
         <div className="mt-6">
           <Link
             href="/"

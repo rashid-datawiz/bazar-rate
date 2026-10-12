@@ -106,7 +106,7 @@ function ProductCard({
 
   return (
     <Link
-      href={`/product/${encodeURIComponent(String(product.slug))}`}
+      href={`/product/${encodeURIComponent(String(product.id))}`}
       className="group flex h-full flex-col rounded-2xl border border-stone-200 bg-white p-4 transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg"
     >
       <div className="mb-3 flex items-start justify-start">

@@ -26,7 +26,7 @@ function SignInForm() {
       !requestedCallback.startsWith("//") &&
       !requestedCallback.includes("\\")
       ? requestedCallback
-      : "/";
+    : "/profile";
 
   const handleSubmit = async (
     event: React.SubmitEvent<HTMLFormElement>

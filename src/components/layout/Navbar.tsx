@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatBanglaDate } from "@/lib/utils";
 import NavLinks from "./Navlinks";
+import AuthNav from "./AuthNav";
 
 const Navbar = () => {
   const todayText = formatBanglaDate();
@@ -30,21 +31,7 @@ const Navbar = () => {
           <div className="flex items-center gap-3">
             
 
-            {/* Replace this link with your existing auth/profile component if available */}
-            <div className="flex items-center gap-2">
-              <Link
-                href="/signin"
-                className="rounded-lg px-3 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-100"
-              >
-                সাইন ইন
-              </Link>
-              <Link
-                href="/signup"
-                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800"
-              >
-                সাইন আপ
-              </Link>
-            </div>
+            <AuthNav />
           </div>
           
         </div>

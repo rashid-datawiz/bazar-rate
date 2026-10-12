@@ -2,10 +2,11 @@
 
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 const SignUpPage = () => {
+  const router = useRouter();
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -33,26 +34,25 @@ const SignUpPage = () => {
       return;
     }
 
-    //setIsLoading(true);
+    setIsLoading(true);
 
     try {
       const { data, error } = await authClient.signUp.email({
         name,
         email,
         password,
-        callbackURL: "/",
+        callbackURL: "/profile",
       });
-      if(data){
-        redirect("/")
-        //console.log(data)
-      }
 
       if (error) {
         setErrorMessage(error.message || "অ্যাকাউন্ট তৈরি করা যায়নি।");
         return;
       }
 
-      //router.push("/");
+      if (data) {
+        router.replace("/profile");
+        router.refresh();
+      }
     } catch {
       setErrorMessage("একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     } finally {
@@ -64,7 +64,7 @@ const SignUpPage = () => {
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/profile",
       });
     } catch {
       setErrorMessage("Google দিয়ে চালিয়ে যাওয়া যায়নি।");
@@ -75,7 +75,7 @@ const SignUpPage = () => {
     try {
       await authClient.signIn.social({
         provider: "github",
-        callbackURL: "/",
+        callbackURL: "/profile",
       });
     } catch {
       setErrorMessage("GitHub দিয়ে চালিয়ে যাওয়া যায়নি।");

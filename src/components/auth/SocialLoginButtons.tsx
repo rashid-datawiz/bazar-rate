@@ -18,7 +18,7 @@ export default function SocialLoginButtons() {
     try {
       const { error } = await authClient.signIn.social({
         provider,
-        callbackURL: "/",
+        callbackURL: "/profile",
       });
 
       if (error) {
